@@ -1,0 +1,7 @@
+# /bin/bash
+export XDG_CONFIG_HOME="$HOME/.config"
+export XDG_CONFIG_DIRS="/etc/xdg"
+mkdir -p /home/matrix0523/.config
+chmod 700 /home/matrix0523/.config
+[ -r /home/matrix0523/.Xresources ] && xrdb /home/matrix0523/.Xresources
+startxfce4 &

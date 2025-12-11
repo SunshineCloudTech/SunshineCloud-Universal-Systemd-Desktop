@@ -1,0 +1,129 @@
+name: SunshineCloud-Universal-Systemd-Desktop-Backup
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+  schedule:
+    # Run backup every Sunday at 2 AM UTC
+    - cron: '0 2 * * 0'
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  backup-repository:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch full history
+        submodules: 'recursive'
+        token: ${{ secrets.REPO_TOKEN }}
+
+    - name: Get current date and time
+      id: datetime
+      run: |
+        echo "timestamp=$(date +%Y%m%d_%H%M%S)" >> $GITHUB_OUTPUT
+        echo "date=$(date +%Y-%m-%d)" >> $GITHUB_OUTPUT
+        echo "commit_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+    - name: Create Backup Package
+      run: |
+        # Create backup directory
+        mkdir -p backup
+        
+        # Create a comprehensive backup archive
+        tar --exclude='.git' \
+            --exclude='node_modules' \
+            --exclude='*.log' \
+            --exclude='__pycache__' \
+            --exclude='.pytest_cache' \
+            --exclude='backup' \
+            --exclude='*.tmp' \
+            --exclude='.vscode' \
+            --exclude='.idea' \
+            -czf backup/SunshineCloud-Universal-Systemd-Desktop-${{ steps.datetime.outputs.timestamp }}.tar.gz \
+            .
+        
+        # Create a git bundle as additional backup
+        git bundle create backup/SunshineCloud-Universal-Systemd-Desktop-${{ steps.datetime.outputs.timestamp }}.bundle --all
+        
+        # List created files
+        ls -la backup/
+        
+        # Calculate checksums
+        cd backup
+        sha256sum *.tar.gz *.bundle > checksums.sha256
+        cat checksums.sha256
+
+    - name: Upload Backup Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: SunshineCloud-Universal-Systemd-Desktop-backup-${{ steps.datetime.outputs.timestamp }}
+        path: backup/
+        retention-days: 30
+    # Create GitHub Release with backup files
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          backup/SunshineCloud-Universal-Systemd-Desktop-${{ steps.datetime.outputs.timestamp }}.tar.gz
+          backup/SunshineCloud-Universal-Systemd-Desktop-${{ steps.datetime.outputs.timestamp }}.bundle
+          backup/checksums.sha256
+        body: |
+          ## 🗄️ SunshineCloud-Universal-Systemd-Desktop Repository Backup
+          
+          **备份日期:** ${{ steps.datetime.outputs.date }}
+          **提交 SHA:** ${{ steps.datetime.outputs.commit_sha }}
+          **备份文件:**
+          
+          - 📦 `SunshineCloud-Universal-Systemd-Desktop-${{ steps.datetime.outputs.timestamp }}.tar.gz` - 完整源代码存档
+          - 🔗 `SunshineCloud-Universal-Systemd-Desktop-${{ steps.datetime.outputs.timestamp }}.bundle` - Git 仓库包
+          - 🔐 `checksums.sha256` - SHA256 校验和验证文件
+          
+          ### 📋 备份内容
+          - 完整的源代码和配置文件
+          - Systemd 容器镜像构建配置 (Debian Bookworm/Bullseye, Ubuntu Noble/Jammy/Focal)
+          - 桌面环境 Dockerfiles (KDE/GNOME/Xfce)
+          - VS Code Dev Container 配置
+          - 多架构支持 (AMD64/ARM64)
+          - GitHub Actions 自动化工作流
+          - Docker Compose 配置文件
+          - 文档和许可证文件
+          - 构建和部署脚本
+          
+          ### 🔍 验证和使用
+          ```bash
+          # 验证文件完整性
+          sha256sum -c checksums.sha256
+          
+          # 解压存档
+          tar -xzf SunshineCloud-Universal-Systemd-Desktop-${{ steps.datetime.outputs.timestamp }}.tar.gz
+          
+          # 从 bundle 克隆
+          git clone SunshineCloud-Universal-Systemd-Desktop-${{ steps.datetime.outputs.timestamp }}.bundle restored-repo
+          ```
+          
+          ### 🚀 项目特性
+          - 多发行版 Systemd 容器支持 (Debian 11/12, Ubuntu 20.04/22.04/24.04)
+          - 多架构镜像构建 (AMD64, ARM64)
+          - 桌面环境支持 (KDE Plasma, GNOME, Xfce)
+          - xRDP 远程桌面访问
+          - 完整的开发工具链 (Node.js, Python, Go, Rust, Java, PowerShell)
+          - DevContainer 开发环境
+          - Docker-in-Docker 支持
+          - 容器化部署解决方案
+          
+          ---
+          *GitHub Actions 自动创建的备份*
+        tag_name: backup-${{ steps.datetime.outputs.timestamp }}
+        name: "Repository Backup - ${{ steps.datetime.outputs.date }}"
+        draft: false
+        prerelease: false
+        token: ${{ secrets.REPO_TOKEN }}
+        make_latest: false

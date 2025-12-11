@@ -1,0 +1,14 @@
+# conda env update -n base -f 
+channels: 
+  - pytorch
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip=24.0
+  - cuda=12.6
+  - pytorch
+  - cudnn=9.3.0.75
+  - torchvision
+  - torchaudio
+  - jupyterlab
+  - jupyterlab-language-pack-zh-CN

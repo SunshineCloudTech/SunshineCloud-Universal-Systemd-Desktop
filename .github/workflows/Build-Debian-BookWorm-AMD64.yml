@@ -1,0 +1,94 @@
+---
+name: Build Debian BookWorm AMD64
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - master
+  schedule:
+    - cron: "25 2 * * 1"
+
+jobs:
+  # Test the image builds and works correctly.
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker
+        uses: docker/setup-docker-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3  
+
+      - name: Test building image.
+        run: docker build -t bookworm-systemd -f debian-bookworm/.devcontainer/Dockerfile .
+
+      - name: Run the built image.
+        run: |
+          docker run --name test-container -d --privileged \
+            -v /sys/fs/cgroup:/sys/fs/cgroup:rw --cgroupns=host \
+            bookworm-systemd
+
+      - name: Verify Ansible is accessible in the built image.
+        run: docker exec --tty test-container env TERM=xterm ansible --version
+
+  # If on master branch, build and release image.
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/master'
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: "Optimize Disk Space"
+        uses: "hugoalh/disk-space-optimizer-ghaction@v0.8.0"
+        with:
+          operate_sudo: "True"
+          general_include: ".+"
+          docker_include: ".+"
+          docker_prune: "True"
+          docker_clean: "True"
+          apt_prune: "True"
+          apt_clean: "True"
+          homebrew_prune: "True"
+          homebrew_clean: "True"
+          npm_prune: "True"
+          npm_clean: "True"
+          os_swap: "True"
+
+      - name: Set up Docker
+        uses: docker/setup-docker-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3  
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - run: sudo npm install -g @devcontainers/cli
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Dev Container image (AMD64)
+        uses: devcontainers/ci@v0.3
+        with:
+          imageName: sunshinecloud007/sunshinecloud-universal-systemd-desktop
+          imageTag: amd64-bookworm-base
+          subFolder: debian-bookworm
+          platform: linux/amd64
+          noCache: true
+          push: always
+
+      - name: Check Disk Space
+        run: df -alh

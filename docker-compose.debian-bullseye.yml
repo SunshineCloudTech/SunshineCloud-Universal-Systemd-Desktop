@@ -1,0 +1,53 @@
+# Debian 11 Bullseye Systemd Container
+# 
+# 使用方法：
+#   后台运行：docker compose -f docker-compose.debian-bullseye.yml up -d
+#   查看日志：docker compose -f docker-compose.debian-bullseye.yml logs -f
+#   停止容器：docker compose -f docker-compose.debian-bullseye.yml down
+#   进入容器：docker exec -it debian-bullseye-systemd /bin/bash
+
+services:
+  debian-bullseye-systemd:
+    image: sunshinecloud007/sunshinecloud-universal-systemd-desktop:amd64-bullseye
+    container_name: debian-bullseye-systemd
+    privileged: true
+    restart: unless-stopped
+    network_mode: host
+    stdin_open: true
+    tty: true
+    
+    # 必需的 systemd 配置
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    
+    # 使用主机的 cgroup namespace
+    cgroup: host
+    
+    # 可选：持久化数据卷
+    # volumes:
+    #   - debian-bullseye-data:/root
+    #   - debian-bullseye-home:/home
+    
+    # 可选：端口映射
+    # ports:
+    #   - "2222:22"    # SSH
+    #   - "8080:80"    # HTTP
+    #   - "11434:11434" # Ollama
+    
+    # 可选：环境变量
+    # environment:
+    #   - TZ=Asia/Shanghai
+    
+    # 可选：网络配置
+    # networks:
+    #   - systemd-net
+
+# 可选：定义数据卷
+# volumes:
+#   debian-bullseye-data:
+#   debian-bullseye-home:
+
+# 可选：定义网络
+# networks:
+#   systemd-net:
+#     driver: bridge

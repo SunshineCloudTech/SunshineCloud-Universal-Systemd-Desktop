@@ -1,51 +1,60 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/java
+// README at: https://github.com/devcontainers/SunshineNoteslates/tree/main/src/java
 {
-	"name": "temp",
+	"name": "SunshineNotes",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	// "image": "sunshinecloud007/base-bookworm:lite",
-	"build": {
-		"dockerfile": "Dockerfile",
-		// Use 'context' to specify the build context. More info: https://aka.ms/devcontainers-dockerfile#context
-		"context": ".",
-		// Use 'args' to pass build arguments. More info: https://aka.ms/devcontainers-dockerfile#args
-		"args": {
-			// "VARIANT": "8"
-		}
-	},
-	"features": {
-		"ghcr.io/devcontainers/features/java:1": {
-			"installGradle": true,
-			"installMaven": true,
-			"installAnt": true,
-			"installGroovy": true,
-			"version": "8",
-			"jdkDistro": "tem",
-			"gradleVersion": "latest",
-			"mavenVersion": "3.9.10",
-			"antVersion": "latest",
-			"groovyVersion": "latest"
-		},
-		"ghcr.io/devcontainers/features/node:1": {
-			"nodeGypDependencies": true,
-			"installYarnUsingApt": true,
-			"version": "lts",
-			"pnpmVersion": "latest",
-			"nvmVersion": "latest"
-		}
-	},
-	"workspaceMount": "source=${localWorkspaceFolder},target=/SunshineCloud/temp-Git,type=bind,consistency=cached",
-	"workspaceFolder": "/SunshineCloud/temp-Git",
+	"image": "debian",
+	// "build": {
+	// 	"dockerfile": "Dockerfile",
+	// 	// Use 'context' to specify the build context. More info: https://aka.ms/devcontainers-dockerfile#context
+	// 	"context": ".",
+	// 	// Use 'args' to pass build arguments. More info: https://aka.ms/devcontainers-dockerfile#args
+	// 	"args": {
+	// 		// "VARIANT": "8"
+	// 	}
+	// },
+	
+	// Override the default command to start systemd
+	"overrideCommand": false,
+	
+	"runArgs": [
+		"--privileged",
+		"--cgroupns=host",
+		"--tmpfs=/tmp",
+		"--tmpfs=/run",
+		"--tmpfs=/run/lock"
+	],
+	"mounts": [
+		"source=/sys/fs/cgroup,target=/sys/fs/cgroup,type=bind"
+	],
+	"features": {},
+	// "workspaceMount": "source=${localWorkspaceFolder},target=/SunshineCloud/SunshineNotes-Git,type=bind,consistency=cached",
+	// "workspaceFolder": "/SunshineCloud/SunshineNotes-Git",
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
+	"forwardPorts": [8080, 8181, 3389, 3306, 9090],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	// "postCreateCommand": "sudo service supervisor start && sudo service dbus start && bash",
+	// "postCreateCommand": "sudo systemctl status || true",
 
 	// Configure tool-specific properties.
 	// "customizations": {},
 
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-	"remoteUser": "matrix0523"
+	"remoteUser": "matrix0523",
+	
+	// Disable init since systemd will be PID 1
+	"init": false,
+	
+	// Ensure container has proper capabilities for systemd
+	"capAdd": [
+		"SYS_ADMIN",
+		"SYS_BOOT"
+	],
+	
+	// Security options for systemd
+	"securityOpt": [
+		"apparmor:unconfined",
+		"seccomp=unconfined"
+	]
 }

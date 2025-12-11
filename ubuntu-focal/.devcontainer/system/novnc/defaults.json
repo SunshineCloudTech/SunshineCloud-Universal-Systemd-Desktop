@@ -1,0 +1,6 @@
+{
+    "autoconnect": true,
+    "reconnect": true,
+    "path": "websockify?token=vnc",
+    "resize": "remote"
+}

@@ -1,0 +1,28 @@
+{
+    "id": "setup-user",
+    "name": "Setup user configs",
+    "containerEnv": {
+        "RUBY_HOME": "/usr/local/rvm/rubies/default",
+        "JAVA_ROOT": "/home/matrix0523/java",
+        "NODE_ROOT": "/home/matrix0523/nvm",
+        "PHP_ROOT": "/home/matrix0523/.php",
+        "PYTHON_ROOT": "/home/matrix0523/.python",
+        "RUBY_ROOT": "/home/matrix0523/.ruby",
+        "MAVEN_ROOT": "/home/matrix0523/.maven",
+        "HUGO_ROOT": "/home/matrix0523/.hugo",
+        "DOTNET_SKIP_FIRST_TIME_EXPERIENCE": "1",
+        "NUGET_XMLDOC_MODE": "skip",
+        "PYTHONIOENCODING": "UTF-8",
+        "NPM_GLOBAL": "/home/matrix0523/.npm-global",
+        "NVS_HOME": "/home/matrix0523/.nvs",
+        "RVM_PATH": "/usr/local/rvm",
+        "RAILS_DEVELOPMENT_HOSTS": ".githubpreview.dev,.preview.app.github.dev,.app.github.dev",
+        "GOROOT": "/usr/local/go",
+        "JUPYTERLAB_PATH": "/home/matrix0523/.local/bin",
+        "PATH": "/home/matrix0523/.dotnet:/home/matrix0523/nvm/current/bin:/home/matrix0523/.php/current/bin:/home/matrix0523/.python/current/bin:/home/matrix0523/java/current/bin:/home/matrix0523/.ruby/current/bin:/home/matrix0523/.local/bin:${PATH}"
+    },
+    "install": {
+        "app": "",
+        "file": "install.sh"
+    }
+}

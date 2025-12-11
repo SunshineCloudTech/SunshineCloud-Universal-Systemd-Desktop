@@ -1,0 +1,106 @@
+# 多容器示例配置
+# 此文件展示如何同时运行多个 systemd 容器
+# 
+# 使用方法：
+#   后台运行：docker compose -f docker-compose.multi.yml up -d
+#   查看日志：docker compose -f docker-compose.multi.yml logs -f
+#   停止容器：docker compose -f docker-compose.multi.yml down
+#   进入容器：docker exec -it <container-name> /bin/bash
+
+services:
+  # Debian 12 Bookworm
+  debian-bookworm:
+    image: sunshinecloud007/sunshinecloud-universal-systemd-desktop:amd64-bookworm
+    container_name: debian-bookworm-systemd
+    privileged: true
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    cgroup: host
+    ports:
+      - "2201:22"
+      - "3391:3389"
+    networks:
+      - systemd-net
+    hostname: debian-bookworm
+  
+  # Debian 11 Bullseye
+  debian-bullseye:
+    image: sunshinecloud007/sunshinecloud-universal-systemd-desktop:amd64-bullseye
+    container_name: debian-bullseye-systemd
+    privileged: true
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    cgroup: host
+    ports:
+      - "2202:22"
+      - "3392:3389"
+    networks:
+      - systemd-net
+    hostname: debian-bullseye
+  
+  # Ubuntu 24.04 Noble
+  ubuntu-noble:
+    image: sunshinecloud007/sunshinecloud-universal-systemd-desktop:amd64-noble
+    container_name: ubuntu-noble-systemd
+    privileged: true
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    cgroup: host
+    ports:
+      - "2203:22"
+      - "3393:3389"
+    networks:
+      - systemd-net
+    hostname: ubuntu-noble
+  
+  # Ubuntu 22.04 Jammy
+  ubuntu-jammy:
+    image: sunshinecloud007/sunshinecloud-universal-systemd-desktop:amd64-jammy
+    container_name: ubuntu-jammy-systemd
+    privileged: true
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    cgroup: host
+    ports:
+      - "2204:22"
+      - "3394:3389"
+    networks:
+      - systemd-net
+    hostname: ubuntu-jammy
+  
+  # Ubuntu 20.04 Focal
+  ubuntu-focal:
+    image: sunshinecloud007/sunshinecloud-universal-systemd-desktop:amd64-focal
+    container_name: ubuntu-focal-systemd
+    privileged: true
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    cgroup: host
+    ports:
+      - "2205:22"
+      - "3395:3389"
+    networks:
+      - systemd-net
+    hostname: ubuntu-focal
+
+networks:
+  systemd-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

@@ -1,0 +1,13 @@
+[Desktop Entry]
+Encoding=UTF-8
+Version=1.0
+Type=Application
+Name=PulseAudio Sound Server
+Comment=Start PulseAudio Sound Server
+Exec=/usr/bin/start-pulseaudio.sh
+Icon=audio-card
+OnlyShowIn=XFCE;
+StartupNotify=false
+Terminal=false
+Hidden=false
+X-XFCE-Autostart-Override=true

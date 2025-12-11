@@ -1,0 +1,343 @@
+ARG VARIANT="bullseye"
+FROM buildpack-deps:${VARIANT}
+LABEL maintainer="SunshineCloudTech"
+LABEL description="Debian 11 with GNOME Desktop, xRDP and Chromium"
+LABEL version="1.0"
+
+ENV container="docker"
+ENV pip_packages="ansible"
+
+# 设置环境变量
+ENV DEBIAN_FRONTEND=noninteractive
+ENV LANG=zh_CN.UTF-8
+ENV LANGUAGE=zh_CN:zh:en_US:en
+ENV LC_ALL=zh_CN.UTF-8
+ENV TZ=Asia/Shanghai
+
+# Flatpak environment variables
+ENV XDG_DATA_DIRS="/usr/local/share:/usr/share:/var/lib/flatpak/exports/share:/home/matrix0523/.local/share/flatpak/exports/share"
+ENV FLATPAK_SYSTEM_DIR="/var/lib/flatpak"
+ENV FLATPAK_USER_DIR="/home/matrix0523/.local/share/flatpak"
+
+USER root 
+
+# 检测并修改 Debian/Ubuntu 镜像源
+# RUN if [ -f /etc/apt/sources.list ]; then \
+#         sed -i 's|deb.debian.org|mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/sources.list; \
+#         echo "已修改 /etc/apt/sources.list"; \
+#     fi && \
+#     if [ -f /etc/apt/sources.list.d/debian.sources ]; then \
+#         sed -i 's|deb.debian.org|mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/sources.list.d/debian.sources; \
+#         echo "已修改 /etc/apt/sources.list.d/debian.sources"; \
+#     fi
+
+# Update package list and install basic packages
+RUN apt-get update && apt-get upgrade -y && apt-get clean
+
+# 配置时区和 locale
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    apt-utils \
+    ca-certificates \
+    gnupg2 \
+    wget \
+    curl \
+    locales \
+    tzdata \
+    sudo && \
+    # 配置时区
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+    echo $TZ > /etc/timezone && \
+    # 配置 locale
+    sed -i 's/^# *\(en_US.UTF-8\)/\1/' /etc/locale.gen && \
+    sed -i 's/^# *\(zh_CN.UTF-8\)/\1/' /etc/locale.gen && \
+    locale-gen && \
+    update-locale LANG=zh_CN.UTF-8 LANGUAGE=zh_CN:zh:en_US:en && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Enable systemd.
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends systemd systemd-sysv && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    (cd /lib/systemd/system/sysinit.target.wants/; for i in *; do [ $i == systemd-tmpfiles-setup.service ] || rm -f $i; done); \
+    rm -f /lib/systemd/system/multi-user.target.wants/*;\
+    rm -f /etc/systemd/system/*.wants/*;\
+    rm -f /lib/systemd/system/local-fs.target.wants/*; \
+    rm -f /lib/systemd/system/sockets.target.wants/*udev*; \
+    rm -f /lib/systemd/system/sockets.target.wants/*initctl*; \
+    rm -f /lib/systemd/system/basic.target.wants/*;\
+    rm -f /lib/systemd/system/anaconda.target.wants/*;
+
+# Install pip and other requirements.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+    python3-pip \
+    sudo xterm \
+    curl wget \
+    ca-certificates \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
+
+# Setup System User and Permissions  
+RUN useradd -m "Administrator" -s /bin/bash && \
+    echo "Administrator:123456789" | chpasswd && \
+    echo "root:123456789" | chpasswd && \
+    usermod -d /home/Administrator/ Administrator && \
+    usermod -aG sudo Administrator && \
+    useradd -m "matrix0523" -s /bin/bash && \
+    echo "matrix0523:123456789" | chpasswd && \
+    usermod -d /home/matrix0523/ matrix0523 && \
+    usermod -aG sudo matrix0523 && \
+    echo 'matrix0523 ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/matrix0523 && \
+    # Create ollama user
+    useradd -r -s /bin/false -U -m -d /usr/share/ollama ollama && \
+    usermod -a -G ollama root && \
+    usermod -a -G ollama Administrator && \
+    usermod -a -G ollama matrix0523 && \
+    # Setup Ollama directories and permissions
+    mkdir -p /var/lib/ollama/models && \
+    chown -R ollama:ollama /var/lib/ollama && \
+    chmod -R 755 /var/lib/ollama
+
+# Create Directory Structure
+RUN mkdir -p /home/Administrator/Desktop /home/Administrator/Documents /home/Administrator/Downloads \
+    /home/Administrator/Music /home/Administrator/Pictures /home/Administrator/Public \
+    /home/Administrator/Templates /home/Administrator/thinclient_drives /home/Administrator/Videos && \
+    mkdir -p /home/matrix0523/Desktop /home/matrix0523/Documents /home/matrix0523/Downloads \
+    /home/matrix0523/Music /home/matrix0523/Pictures /home/matrix0523/Public \
+    /home/matrix0523/Templates /home/matrix0523/thinclient_drives /home/matrix0523/Videos && \
+    mkdir -p /app /SunshineCloud /lost+found && \
+    mkdir -p /DATA/AppData /DATA/Documents /DATA/Downloads /DATA/Gallery /DATA/Compressed \
+    /DATA/Desktop /DATA/Games /DATA/General /DATA/ISOS /DATA/Media /DATA/Others \
+    /DATA/Programs /DATA/Public /DATA/Templates /DATA/Tools /DATA/Torrents /DATA/Videos && \
+    mkdir -p /DATA/Media/Movies /DATA/Media/Music /DATA/Media/TV_Shows && \
+    mkdir -p /SunshineCloud/AppData /SunshineCloud/Documents /SunshineCloud/Downloads \
+    /SunshineCloud/Gallery /SunshineCloud/Compressed /SunshineCloud/Desktop \
+    /SunshineCloud/Games /SunshineCloud/General /SunshineCloud/ISOS /SunshineCloud/Media \
+    /SunshineCloud/Others /SunshineCloud/Programs /SunshineCloud/Public \
+    /SunshineCloud/Templates /SunshineCloud/Tools /SunshineCloud/Torrents /SunshineCloud/Videos && \
+    mkdir -p /SunshineCloud/Media/Movies /SunshineCloud/Media/Music /SunshineCloud/Media/TV_Shows && \
+    mkdir -p /media/appdata /media/documents /media/downloads /media/gallery /media/compressed \
+    /media/desktop /media/games /media/general /media/isos /media/media /media/others \
+    /media/programs /media/public /media/templates /media/tools /media/torrents /media/videos && \
+    mkdir -p /media/media/movies /media/media/music /media/media/tv_shows && \
+    mkdir -p /var/run/dbus && \
+    chown -R Administrator:Administrator /home/Administrator && \
+    chown -R matrix0523:matrix0523 /home/matrix0523
+
+# ==========================================
+# 安装 GNOME 核心必需包
+# ==========================================
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    # GNOME 核心组件
+    gnome-core \
+    gnome-shell \
+    gnome-session \
+    gnome-settings-daemon \
+    gnome-control-center \
+    gnome-terminal \
+    gnome-keyring \
+    network-manager-gnome \
+    gnome-backgrounds \
+    gdm3 \
+    nautilus \
+    # 高级设置工具
+    gnome-tweaks && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# ==========================================
+# 安装 GNOME 标准推荐包（完整桌面体验）
+# ==========================================
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    gnome-software \
+    gnome-software-plugin-flatpak \
+    gnome-system-monitor \
+    gnome-disk-utility \
+    gnome-calculator \
+    gnome-screenshot \
+    evince \
+    eog \
+    file-roller \
+    gedit \
+    gnome-font-viewer \
+    gnome-logs \
+    gnome-characters && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# ==========================================
+# 安装 GNOME 可选应用
+# ==========================================
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    # 办公娱乐
+    gnome-calendar \
+    gnome-contacts \
+    gnome-weather \
+    gnome-clocks \
+    gnome-maps \
+    gnome-music \
+    # 实用工具
+    gnome-sound-recorder \
+    # 小游戏
+    gnome-2048 \
+    gnome-chess \
+    gnome-sudoku \
+    gnome-mines \
+    gnome-mahjongg \
+    gnome-nibbles && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# ==========================================
+# 安装 GNOME Shell 扩展 (Debian 11 可用的扩展)
+# ==========================================
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    gnome-shell-extensions \
+    gnome-shell-extension-appindicator \
+    gnome-shell-extension-dashtodock \
+    gnome-shell-extension-arc-menu \
+    # gnome-shell-extension-gsconnect \
+    gnome-shell-extension-caffeine && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# ==========================================
+# 安装浏览器（Firefox-ESR）
+# ==========================================
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    firefox-esr \
+    firefox-esr-l10n-zh-cn && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# ==========================================
+# 安装 xRDP 和远程桌面支持
+# ==========================================
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    xrdp \
+    xorgxrdp \
+    dbus-x11 \
+    x11-xserver-utils \
+    x11-utils \
+    xserver-xorg-core \
+    xserver-xorg-input-all \
+    xserver-xorg-video-all \
+    tigervnc-standalone-server && \
+    # 配置 xRDP
+    adduser xrdp ssl-cert 2>/dev/null || true && \
+    # 创建 xRDP 配置目录
+    mkdir -p /var/run/xrdp && \
+    chmod 755 /var/run/xrdp && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# ==========================================
+# 安装常用工具和中文支持
+# ==========================================
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    # 中文字体
+    fonts-noto-cjk \
+    fonts-noto-color-emoji \
+    fonts-wqy-microhei \
+    fonts-wqy-zenhei \
+    # 输入法支持
+    ibus \
+    ibus-gtk \
+    ibus-gtk3 \
+    ibus-libpinyin \
+    # 系统工具
+    vim \
+    nano \
+    git \
+    htop \
+    neofetch \
+    net-tools \
+    iputils-ping \
+    wget \
+    curl \
+    unzip \
+    zip \
+   unrar* \
+    p7zip-full \
+    tree \
+    software-properties-common \
+    flatpak \
+    # 音视频支持
+    pulseaudio \
+    pulseaudio-utils \
+    alsa-utils \
+    gstreamer1.0-plugins-base \
+    gstreamer1.0-plugins-good \
+    gstreamer1.0-plugins-bad \
+    gstreamer1.0-plugins-ugly \
+    gstreamer1.0-libav && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# ==========================================
+# 配置 xRDP 使用 GNOME
+# ==========================================
+
+RUN echo '#!/bin/bash' > /etc/xrdp/startwm.sh && \
+    echo 'unset DBUS_SESSION_BUS_ADDRESS' >> /etc/xrdp/startwm.sh && \
+    echo 'unset XDG_RUNTIME_DIR' >> /etc/xrdp/startwm.sh && \
+    echo 'export XDG_SESSION_TYPE=x11' >> /etc/xrdp/startwm.sh && \
+    echo 'export GDK_BACKEND=x11' >> /etc/xrdp/startwm.sh && \
+    echo 'exec gnome-session' >> /etc/xrdp/startwm.sh && \
+    chmod +x /etc/xrdp/startwm.sh
+
+# 配置 xRDP 端口和性能
+RUN sed -i 's/^port=3389/port=3389/g' /etc/xrdp/xrdp.ini && \
+    sed -i 's/^max_bpp=32/max_bpp=128/g' /etc/xrdp/xrdp.ini && \
+    sed -i 's/^xserverbpp=24/xserverbpp=128/g' /etc/xrdp/xrdp.ini
+
+# ==========================================
+# 配置 GDM3 和系统默认图形界面
+# ==========================================
+
+RUN systemctl set-default graphical.target && \
+    systemctl enable gdm3 2>/dev/null || true && \
+    systemctl enable xrdp 2>/dev/null || true
+
+# 为 Administrator 和 matrix0523 添加必要的组
+RUN usermod -aG audio,video,plugdev,netdev Administrator 2>/dev/null || true && \
+    usermod -aG audio,video,plugdev,netdev matrix0523 2>/dev/null || true
+
+# Install Ansible via Pip.
+RUN pip config set global.index-url https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
+RUN pip3 install $pip_packages
+
+# Disable requiretty.
+RUN sed -i -e 's/^\(Defaults\s*requiretty\)/#--- \1/'  /etc/sudoers
+
+# Install Ollama
+# RUN curl -fsSL https://ollama.com/install.sh | sh
+
+# Install Ansible inventory file.
+RUN mkdir -vp /etc/ansible
+RUN echo '[local]\nlocalhost ansible_connection=local' > /etc/ansible/hosts
+
+# 清理
+RUN apt-get autoremove -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/cache/apt/archives/*
+
+VOLUME ["/sys/fs/cgroup", "/tmp", "/run"]
+EXPOSE 3389
+ENTRYPOINT [ "/lib/systemd/systemd" ]

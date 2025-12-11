@@ -1,0 +1,69 @@
+{
+    "name": "micromamba",
+    "id": "micromamba",
+    "version": "1.2.0",
+    "description": "Installs micromamba, the fast cross-platform package manager.",
+    "documentationURL": "https://github.com/mamba-org/devcontainer-features/tree/main/src/micromamba",
+    "options": {
+        "version": {
+            "type": "string",
+            "proposals": [
+                "latest"
+            ],
+            "default": "latest",
+            "description": "Exact version of Micromamba to install, if not latest (must be X.Y.Z)"
+        },
+        "allowReinstall": {
+            "type": "boolean",
+            "default": false,
+            "description": "Reinstall in case Micromamba already exists"
+        },
+        "autoActivate": {
+            "type": "boolean",
+            "default": true,
+            "description": "Auto activation of base environment"
+        },
+        "channels": {
+            "type": "string",
+            "default": "",
+            "proposals": [
+                "conda-forge"
+            ],
+            "description": "Space separated list of Conda channels to add"
+        },
+        "packages": {
+            "type": "string",
+            "default": "",
+            "proposals": [
+                "",
+                "python>=3.11,<3.12 r-base"
+            ],
+            "description": "Space separated list of packages to install. Should use with the 'channels' option."
+        },
+        "envFile": {
+            "type": "string",
+            "default": "",
+            "proposals": [
+                "",
+                "/path/to/spec-file.yml"
+            ],
+            "description": "Path of the an environment file (spec file) in the container. Referenced by the `micromamba create` command's `-f` option"
+        },
+        "envName": {
+            "type": "string",
+            "default": "",
+            "proposals": [
+                "",
+                "myenv"
+            ],
+            "description": "Should use with the 'envFile' option. Referenced by the `micromamba create` command's `-n` option"
+        }
+    },
+    "containerEnv": {
+        "MAMBA_ROOT_PREFIX": "/opt/micromamba",
+        "PATH": "/opt/micromamba/bin:${PATH}"
+    },
+    "installsAfter": [
+        "ghcr.io/devcontainers/features/common-utils"
+    ]
+}

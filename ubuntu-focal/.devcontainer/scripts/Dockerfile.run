@@ -1,0 +1,3 @@
+FROM sunshinecloud007/sunshinecloud-machine-learning-environment:version1
+ENTRYPOINT ["/usr/bin/bash", "-c"]
+CMD ["sudo service supervisor start && sudo service dbus restart && sudo service xrdp start && bash"] 

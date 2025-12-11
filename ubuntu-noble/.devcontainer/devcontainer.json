@@ -1,0 +1,229 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/java
+{
+	"name": "Ubuntu-Noble-Systemd-Devcontainer",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	// "image": "sunshinecloud007/base-bookworm:lite",
+	// Use 'dockerComposeFile' to specify a Docker Compose file. More info: https://aka.ms/devcontainers-docker-compose
+	// "dockerComposeFile": "../docker-compose.yml",
+	// "service": " SunshineCloud-Universal-SelfHosted",
+    /*
+     * SunshineCloud 通用开发容器配置文件
+     * 
+     * 这是一个功能完整的 DevContainer 配置，提供多语言开发环境
+     * 包含以下主要功能：
+     * 1. 多语言运行时支持（Python、Node.js、Java、Go、Ruby、PHP、.NET）
+     * 2. 容器化开发工具（Docker、Kubernetes）
+     * 3. 版本控制工具（Git、Git LFS、GitHub CLI）
+     * 4. 机器学习和数据科学工具包
+     * 5. Web 开发工具（Hugo、Jekyll）
+     * 6. 终端和 Shell 增强
+     * 
+     * 适用场景：
+     * - 全栈 Web 开发
+     * - 机器学习和数据科学项目
+     * - DevOps 和云原生开发
+     * - 多语言项目开发
+     * 
+     * 维护者: SunshineCloud Team
+     * 版本: 2024 Universal Edition
+     */
+    
+    // 构建配置：指定 Dockerfile 和构建上下文
+    "build": {
+        "dockerfile": "./Dockerfile",     // Dockerfile 路径
+        "context": "."                   // 构建上下文（当前目录）
+    },
+    
+    // 功能特性配置：定义要安装的开发工具和运行时环境
+    "features": {
+        // 通用工具：基础系统工具和 Shell 配置
+        "ghcr.io/devcontainers/features/common-utils:2": {
+            "installZsh": true,                    // 安装 Zsh Shell
+            "configureZshAsDefaultShell": false,   // 不设置为默认 Shell
+            "installOhMyZsh": true,               // 安装 Oh My Zsh 框架
+            "installOhMyZshConfig": true,         // 配置 Oh My Zsh
+            "upgradePackages": true,              // 升级系统包
+            "nonFreePackages": true,              // 允许安装非自由软件包
+            "username": "sunshinecloud",          // 用户名
+            "userUid": "1329",                   // 用户 UID
+            "userGid": "1329"                    // 用户 GID
+        },
+        
+        // Node.js 开发环境：JavaScript/TypeScript 开发支持
+        "ghcr.io/devcontainers/features/node:1": {
+            "nvmInstallPath": "/usr/local/share/nvm", // NVM 安装路径
+            "nodeGypDependencies": true,          // 安装 node-gyp 依赖
+            "installYarnUsingApt": true,          // 通过 APT 安装 Yarn
+            "version": "lts",                     // Node.js LTS 版本
+            "pnpmVersion": "latest",              // PNPM 包管理器最新版本
+            "nvmVersion": "latest"                // NVM 最新版本
+        },
+
+        // Python 开发环境：数据科学和 Web 开发支持
+        // "ghcr.io/devcontainers/features/python:1": {
+        //     "installPath": "/usr/local/python",   // Python 安装路径
+        //     "installTools": true,                 // 安装开发工具（pip、setuptools）
+        //     "toolsToInstall": "pipx, poetry, uv", // 额外工具列表
+        //     "optimize": true,                     // 优化 Python 性能
+        //     "enableShared": true,                 // 启用共享库
+        //     "installJupyterlab": true,           // 安装 JupyterLab
+        //     "configureJupyterlabAllowOrigin": "0.0.0.0", // JupyterLab 允许的来源
+        //     "version": "3.10"                    // Python 版本
+        // },
+        
+        // Conda 包管理器：Python 科学计算环境管理（已注释）
+        // "ghcr.io/devcontainers/features/conda:1": {
+        //     "addCondaForge": true,                // 添加 conda-forge 频道
+        //     "version": "latest"                   // Conda 最新版本
+        // },
+                        
+        // SSH 服务器：远程访问支持
+        "ghcr.io/devcontainers/features/sshd:1": {
+            "version": "latest"                   // SSH 服务器最新版本
+        },
+        
+        // Git 版本控制：代码版本管理
+        "ghcr.io/devcontainers/features/git:1": {
+            "version": "system",                  // 使用系统版本的 Git
+            "ppa": false                         // 不使用 PPA 源
+        },
+        
+        // Git LFS：大文件版本控制
+        "ghcr.io/devcontainers/features/git-lfs:1": {
+            "autoPull": true,                     // 自动拉取 LFS 文件
+            "installDirectlyFromGitHubRelease": true, // 从 GitHub Release 直接安装
+            "version": "latest"                   // Git LFS 最新版本
+        },
+        
+        // GitHub CLI：GitHub 命令行工具
+        "ghcr.io/devcontainers/features/github-cli:1": {
+            "installDirectlyFromGitHubRelease": true, // 从 GitHub Release 直接安装
+            "version": "latest"                   // GitHub CLI 最新版本
+        },
+        
+        // Docker-in-Docker：容器化开发支持
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {
+            "moby": true,                         // 使用 Moby 引擎
+            "mobyBuildxVersion": "latest",        // Docker Buildx 最新版本
+            "azureDnsAutoDetection": true,        // Azure DNS 自动检测
+            "installDockerBuildx": true,          // 安装 Docker Buildx
+            "installDockerComposeSwitch": true,   // 安装 Docker Compose 切换器
+            "version": "latest",                  // Docker 最新版本
+            "dockerDashComposeVersion": "v2"      // Docker Compose v2
+        },
+
+        // PowerShell：跨平台脚本和自动化支持
+        "ghcr.io/devcontainers/features/powershell:1": {
+            "version": "latest"                   // PowerShell 最新版本
+        },
+
+        // Go：Go 语言开发环境
+        "ghcr.io/devcontainers/features/go:1": {
+            "version": "latest",                  // Go 最新版本
+            "golangciLintVersion": "latest"       // golangci-lint 最新版本
+        },
+
+        // Rust：Rust 语言开发环境
+        "ghcr.io/devcontainers/features/rust:1": {
+            "version": "latest",                  // Rust 最新版本
+            "profile": "complete",                 // Rustup 安装配置（最小化）
+            "components": "rust-analyzer,rust-src,rustfmt,clippy"  // Rust 组件
+        },
+
+        // Java：Java 开发环境（通过 SDKMAN!）
+        "ghcr.io/devcontainers/features/java:1": {
+            "version": "latest",                  // Java 最新版本
+            "jdkDistro": "tem",                    // JDK 发行版（Microsoft Build of OpenJDK）
+            "installGradle": true,                // 安装 Gradle 构建工具
+            "gradleVersion": "latest",            // Gradle 最新版本
+            "installMaven": true,                 // 安装 Maven 构建工具
+            "mavenVersion": "latest",             // Maven 最新版本
+            "installAnt": false,                  // 不安装 Ant
+            "installGroovy": false                // 不安装 Groovy
+        },
+                
+        // NVIDIA CUDA：GPU 计算和机器学习支持（已注释）
+        // "ghcr.io/devcontainers/features/nvidia-cuda:2": {
+        //     "installCudnn": true,                 // 安装 CUDA Deep Neural Network (cuDNN) 库
+        //     "installCudnnDev": true,              // 安装 cuDNN 开发库和头文件  
+        //     "installNvtx": true,                  // 安装 NVIDIA Tools Extension (NVTX)
+        //     "installToolkit": true,               // 安装 NVIDIA CUDA Toolkit
+        //     "cudaVersion": "12.6",                // CUDA 版本（兼容性好）
+        //     "cudnnVersion": "9.3.0.75"           // cuDNN 版本（自动选择最适合的版本）
+        // },
+        
+        // 自定义功能特性（本地开发）
+        "./features/nvs": "latest",              // Node Version Switcher
+        // "./features/machine-learning-packages": "latest", // 机器学习包集合（已注释）
+        // "./features/setup-user": "latest",       // 用户环境配置（已注释）
+        // "./features/patch-python": {},           // Python 环境修补（已注释）
+        // "./features/patch-conda": {},            // Conda 环境修补（已注释）
+		"./features/micromamba": {
+			"allowReinstall": true,
+			"autoActivate": true,
+			"version": "latest",
+			"channels": "conda-forge",
+			"packages": "python>=3.10,<3.11 uv pip"
+		},
+        
+        // Ollama：本地 AI 模型运行环境
+        "./features/ollama": {
+            "pull": "qwen3"                           // 需要预拉取的模型列表（逗号分隔）
+        }
+    },
+    /*
+     * 功能安装顺序控制
+     * 
+     * 指定各个功能特性的安装顺序，确保依赖关系正确
+     * 基础工具优先安装，语言运行时其次，开发工具最后
+     * 这个顺序经过优化，避免安装冲突和依赖问题
+     */
+    "overrideFeatureInstallOrder": [
+        "ghcr.io/devcontainers/features/common-utils",     // 基础系统工具
+        "ghcr.io/devcontainers/features/git",              // Git 版本控制
+        // "ghcr.io/devcontainers/features/nvidia-cuda",      // NVIDIA CUDA 支持
+        "ghcr.io/devcontainers/features/node",             // Node.js 环境
+        "./features/nvs",                                   // Node 版本切换器
+        // "ghcr.io/devcontainers/features/conda",            // Conda 包管理器
+        // "./features/patch-conda",                           // Conda 环境修补
+        // "ghcr.io/devcontainers/features/python",           // Python 环境
+        // "./features/patch-python",                          // Python 环境修补
+        // "./features/machine-learning-packages",             // 机器学习包
+        "./features/micromamba",                           // Micromamba 包管理器
+        "ghcr.io/devcontainers/features/powershell",       // PowerShell
+        "ghcr.io/devcontainers/features/go",               // Go 语言
+        "ghcr.io/devcontainers/features/rust",             // Rust 语言
+        "ghcr.io/devcontainers/features/sshd",             // SSH 服务器
+        "ghcr.io/devcontainers/features/git-lfs",          // Git LFS
+        "ghcr.io/devcontainers/features/github-cli",       // GitHub CLI
+        "ghcr.io/devcontainers/features/docker-in-docker", // Docker 支持
+        "./features/ollama"                                // Ollama AI 模型运行环境
+        // "./features/setup-user"                            // 用户环境配置（最后执行）
+    ],
+    
+    // 容器用户配置
+    "remoteUser": "matrix0523",      // 远程连接用户名
+    "containerUser": "matrix0523",   // 容器内用户名	
+	"containerEnv": {
+        "PATH": "/usr/local/sbin:/usr/local/bin:/usr/local/share/nvm:/sbin:/bin:/usr/sbin:/usr/bin:${PATH}"
+    },
+	"workspaceMount": "source=${localWorkspaceFolder},target=/SunshineCloud/SunshineCloud-AIAPP-SelfHosted-Git,type=bind,consistency=cached",
+	"workspaceFolder": "/SunshineCloud/SunshineCloud-AIAPP-SelfHosted-Git",
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+
+	// Use 'postCreateCommand' to run commands after the container is created.
+	"postCreateCommand": "sudo /usr/local/share/docker-init.sh bash -c 'sudo service supervisor start && sudo service dbus restart && sudo service xrdp start'",
+
+	// Configure tool-specific properties.
+	"customizations": {
+		"codespaces": {
+			// "openFiles": [
+			// 	"/SunshineCloud/SunshineCloud-Universal-SelfHosted-Git/README.md"
+			// ]
+		}
+	}
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+}

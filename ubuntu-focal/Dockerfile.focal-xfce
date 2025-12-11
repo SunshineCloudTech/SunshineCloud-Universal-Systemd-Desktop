@@ -1,0 +1,385 @@
+ARG VARIANT="focal"
+FROM buildpack-deps:${VARIANT}
+LABEL maintainer="SunshineCloudTech"
+ENV container="docker"
+ENV pip_packages="ansible"
+
+# 设置非交互式安装
+ENV DEBIAN_FRONTEND=noninteractive
+
+# 设置时区
+ENV TZ=Asia/Shanghai
+ENV LANG=zh_CN.UTF-8
+ENV LANGUAGE=zh_CN:zh:en_US:en
+ENV LC_ALL=zh_CN.UTF-8
+
+# Flatpak environment variables
+ENV XDG_DATA_DIRS="/usr/local/share:/usr/share:/var/lib/flatpak/exports/share:/home/matrix0523/.local/share/flatpak/exports/share"
+ENV FLATPAK_SYSTEM_DIR="/var/lib/flatpak"
+ENV FLATPAK_USER_DIR="/home/matrix0523/.local/share/flatpak"
+
+USER root 
+
+# 检测并修改 Debian/Ubuntu 镜像源
+# RUN if [ -f /etc/apt/sources.list ]; then \
+#         sed -i 's|archive.ubuntu.com|mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/sources.list; \
+#         echo "已修改 /etc/apt/sources.list"; \
+#     fi && \
+#     if [ -f /etc/apt/sources.list.d/ubuntu.sources ]; then \
+#         sed -i 's|archive.ubuntu.com|mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/sources.list.d/ubuntu.sources; \
+#         echo "已修改 /etc/apt/sources.list.d/ubuntu.sources"; \
+#     fi
+
+# Update package list and install basic packages
+RUN apt-get update && apt-get upgrade -y && apt-get clean
+
+# 配置中文语言环境
+RUN apt-get update && apt-get install -y --no-install-recommends locales && \
+    sed -i 's/^# *\(zh_CN.UTF-8\)/\1/' /etc/locale.gen && \
+    sed -i 's/^# *\(en_US.UTF-8\)/\1/' /etc/locale.gen && \
+    locale-gen && \
+    update-locale LANG=zh_CN.UTF-8 LANGUAGE=zh_CN:zh:en_US:en && \
+    rm -rf /var/lib/apt/lists/*
+
+# Enable systemd.
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends systemd systemd-sysv && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    (cd /lib/systemd/system/sysinit.target.wants/; for i in *; do [ $i == systemd-tmpfiles-setup.service ] || rm -f $i; done); \
+    rm -f /lib/systemd/system/multi-user.target.wants/*;\
+    rm -f /etc/systemd/system/*.wants/*;\
+    rm -f /lib/systemd/system/local-fs.target.wants/*; \
+    rm -f /lib/systemd/system/sockets.target.wants/*udev*; \
+    rm -f /lib/systemd/system/sockets.target.wants/*initctl*; \
+    rm -f /lib/systemd/system/basic.target.wants/*;\
+    rm -f /lib/systemd/system/anaconda.target.wants/*;
+
+# Install pip and other requirements.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+    python3-pip \
+    sudo xterm \
+    curl wget \
+    ca-certificates \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
+
+# Setup System User and Permissions  
+RUN useradd -m "Administrator" -s /bin/bash && \
+    echo "Administrator:123456789" | chpasswd && \
+    echo "root:123456789" | chpasswd && \
+    usermod -d /home/Administrator/ Administrator && \
+    usermod -aG sudo Administrator && \
+    useradd -m "matrix0523" -s /bin/bash && \
+    echo "matrix0523:123456789" | chpasswd && \
+    usermod -d /home/matrix0523/ matrix0523 && \
+    usermod -aG sudo matrix0523 && \
+    echo 'matrix0523 ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/matrix0523 && \
+    # Create ollama user
+    useradd -r -s /bin/false -U -m -d /usr/share/ollama ollama && \
+    usermod -a -G ollama root && \
+    usermod -a -G ollama Administrator && \
+    usermod -a -G ollama matrix0523 && \
+    # Setup Ollama directories and permissions
+    mkdir -p /var/lib/ollama/models && \
+    chown -R ollama:ollama /var/lib/ollama && \
+    chmod -R 755 /var/lib/ollama
+
+# Create Directory Structure
+RUN mkdir -p /home/Administrator/Desktop /home/Administrator/Documents /home/Administrator/Downloads \
+    /home/Administrator/Music /home/Administrator/Pictures /home/Administrator/Public \
+    /home/Administrator/Templates /home/Administrator/thinclient_drives /home/Administrator/Videos && \
+    mkdir -p /home/matrix0523/Desktop /home/matrix0523/Documents /home/matrix0523/Downloads \
+    /home/matrix0523/Music /home/matrix0523/Pictures /home/matrix0523/Public \
+    /home/matrix0523/Templates /home/matrix0523/thinclient_drives /home/matrix0523/Videos && \
+    mkdir -p /app /SunshineCloud /lost+found && \
+    mkdir -p /DATA/AppData /DATA/Documents /DATA/Downloads /DATA/Gallery /DATA/Compressed \
+    /DATA/Desktop /DATA/Games /DATA/General /DATA/ISOS /DATA/Media /DATA/Others \
+    /DATA/Programs /DATA/Public /DATA/Templates /DATA/Tools /DATA/Torrents /DATA/Videos && \
+    mkdir -p /DATA/Media/Movies /DATA/Media/Music /DATA/Media/TV_Shows && \
+    mkdir -p /SunshineCloud/AppData /SunshineCloud/Documents /SunshineCloud/Downloads \
+    /SunshineCloud/Gallery /SunshineCloud/Compressed /SunshineCloud/Desktop \
+    /SunshineCloud/Games /SunshineCloud/General /SunshineCloud/ISOS /SunshineCloud/Media \
+    /SunshineCloud/Others /SunshineCloud/Programs /SunshineCloud/Public \
+    /SunshineCloud/Templates /SunshineCloud/Tools /SunshineCloud/Torrents /SunshineCloud/Videos && \
+    mkdir -p /SunshineCloud/Media/Movies /SunshineCloud/Media/Music /SunshineCloud/Media/TV_Shows && \
+    mkdir -p /media/appdata /media/documents /media/downloads /media/gallery /media/compressed \
+    /media/desktop /media/games /media/general /media/isos /media/media /media/others \
+    /media/programs /media/public /media/templates /media/tools /media/torrents /media/videos && \
+    mkdir -p /media/media/movies /media/media/music /media/media/tv_shows && \
+    mkdir -p /var/run/dbus && \
+    chown -R Administrator:Administrator /home/Administrator && \
+    chown -R matrix0523:matrix0523 /home/matrix0523
+
+# ==========================================
+# 安装 Xfce 桌面环境
+# ==========================================
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # 桌面基础
+    xfce4 \
+    xfce4-panel \
+    xfce4-session \
+    xfce4-settings \
+    xfce4-appfinder \
+    # 基础工具
+    xfce4-terminal \
+    xfce4-power-manager \
+    xfce4-power-manager-data \
+    xfce4-power-manager-plugins \
+    xfce4-notifyd \
+    # 重要扩展
+    xfce4-screensaver \
+    xfce4-screenshooter \
+    xfce4-taskmanager \
+    xfce4-clipman \
+    xfce4-clipman-plugin \
+    xfce4-whiskermenu-plugin \
+    xfce4-pulseaudio-plugin \
+    # 实用插件
+    xfce4-weather-plugin \
+    xfce4-systemload-plugin \
+    xfce4-cpugraph-plugin \
+    xfce4-netload-plugin \
+    xfce4-battery-plugin \
+    xfce4-datetime-plugin \
+    xfce4-genmon-plugin \
+    xfce4-places-plugin \
+    # 小众插件
+    xfce4-eyes-plugin \
+    xfce4-timer-plugin \
+    xfce4-notes \
+    xfce4-notes-plugin \
+    xfce4-dict \
+    xfce4-smartbookmark-plugin \
+    xfce4-verve-plugin \
+    xfce4-mailwatch-plugin \
+    # 外观/界面定制
+    xfce4-indicator-plugin \
+    xfce4-panel-profiles \
+    # 监控类插件
+    xfce4-diskperf-plugin \
+    xfce4-fsguard-plugin \
+    xfce4-cpufreq-plugin \
+    xfce4-sensors-plugin \
+    xfce4-mount-plugin \
+    && rm -rf /var/lib/apt/lists/*
+
+# ==========================================
+# 安装浏览器（Firefox）
+# ==========================================
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    firefox \
+    firefox-locale-zh-hans \
+    && rm -rf /var/lib/apt/lists/*
+
+# ==========================================
+# 安装 XRDP 远程桌面支持
+# ==========================================
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    xrdp \
+    xorgxrdp \
+    dbus-x11 \
+    x11-xserver-utils \
+    x11-utils \
+    tigervnc-standalone-server \
+    && rm -rf /var/lib/apt/lists/*
+
+# 配置 XRDP 使用 Xfce
+RUN echo "xfce4-session" > /etc/skel/.xsession && \
+    echo "startxfce4" > /etc/skel/.Xclients && \
+    chmod +x /etc/skel/.Xclients
+
+# 配置 XRDP
+RUN sed -i 's/^port=3389/port=3389/g' /etc/xrdp/xrdp.ini && \
+    sed -i 's/^max_bpp=32/max_bpp=128/g' /etc/xrdp/xrdp.ini && \
+    sed -i 's/^xserverbpp=24/xserverbpp=128/g' /etc/xrdp/xrdp.ini
+
+# 创建 XRDP 启动脚本 (Ubuntu 20.04 使用 Fcitx 4.x)
+RUN echo '#!/bin/bash' > /etc/xrdp/startwm.sh && \
+    echo 'unset DBUS_SESSION_BUS_ADDRESS' >> /etc/xrdp/startwm.sh && \
+    echo 'unset XDG_RUNTIME_DIR' >> /etc/xrdp/startwm.sh && \
+    echo 'export GTK_IM_MODULE=fcitx' >> /etc/xrdp/startwm.sh && \
+    echo 'export QT_IM_MODULE=fcitx' >> /etc/xrdp/startwm.sh && \
+    echo 'export XMODIFIERS=@im=fcitx' >> /etc/xrdp/startwm.sh && \
+    echo 'export SDL_IM_MODULE=fcitx' >> /etc/xrdp/startwm.sh && \
+    echo 'fcitx -d &' >> /etc/xrdp/startwm.sh && \
+    echo 'exec startxfce4' >> /etc/xrdp/startwm.sh && \
+    chmod +x /etc/xrdp/startwm.sh
+
+# ==========================================
+# 安装 Fcitx 中文输入法 (Ubuntu 20.04 使用 Fcitx 4.x)
+# ==========================================
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    fcitx \
+    fcitx-googlepinyin \
+    fcitx-sunpinyin \
+    fcitx-module-cloudpinyin \
+    fcitx-frontend-gtk2 \
+    fcitx-frontend-gtk3 \
+    fcitx-frontend-qt5 \
+    fcitx-ui-classic \
+    fcitx-ui-light \
+    fcitx-config-gtk \
+    kde-config-fcitx \
+    && rm -rf /var/lib/apt/lists/*
+
+# 配置 Fcitx 环境变量
+RUN mkdir -p /etc/profile.d && \
+    echo 'export GTK_IM_MODULE=fcitx' > /etc/profile.d/fcitx.sh && \
+    echo 'export QT_IM_MODULE=fcitx' >> /etc/profile.d/fcitx.sh && \
+    echo 'export XMODIFIERS=@im=fcitx' >> /etc/profile.d/fcitx.sh && \
+    echo 'export INPUT_METHOD=fcitx' >> /etc/profile.d/fcitx.sh && \
+    echo 'export SDL_IM_MODULE=fcitx' >> /etc/profile.d/fcitx.sh && \
+    chmod +x /etc/profile.d/fcitx.sh
+
+# 为所有用户配置 Fcitx
+RUN echo 'GTK_IM_MODULE=fcitx' >> /etc/environment && \
+    echo 'QT_IM_MODULE=fcitx' >> /etc/environment && \
+    echo 'XMODIFIERS=@im=fcitx' >> /etc/environment && \
+    echo 'INPUT_METHOD=fcitx' >> /etc/environment && \
+    echo 'SDL_IM_MODULE=fcitx' >> /etc/environment
+
+# ==========================================
+# 安装常用工具和应用
+# ==========================================
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # 文件管理器和工具
+    thunar \
+    thunar-archive-plugin \
+    thunar-media-tags-plugin \
+    thunar-volman \
+    file-roller \
+    # 文本编辑器
+    mousepad \
+    gedit \
+    vim \
+    nano \
+    # 系统工具
+    htop \
+    neofetch \
+    net-tools \
+    iputils-ping \
+    traceroute \
+    git \
+    unzip \
+    zip \
+   unrar* \
+    p7zip-full \
+    flatpak \
+    # 多媒体
+    vlc \
+    ristretto \
+    parole \
+    # 办公
+    libreoffice \
+    libreoffice-l10n-zh-cn \
+    libreoffice-help-zh-cn \
+    # PDF 阅读器
+    evince \
+    # 网络工具
+    network-manager \
+    network-manager-gnome \
+    # 音频
+    pulseaudio \
+    pulseaudio-utils \
+    pavucontrol \
+    alsa-utils \
+    # 字体
+    fonts-noto \
+    fonts-noto-cjk \
+    fonts-noto-color-emoji \
+    fonts-liberation \
+    fonts-dejavu \
+    fonts-wqy-microhei \
+    fonts-wqy-zenhei \
+    # 主题和图标
+    arc-theme \
+    papirus-icon-theme \
+    elementary-xfce-icon-theme \
+    && rm -rf /var/lib/apt/lists/*
+
+# ==========================================
+# 创建 xfceuser 用户并配置
+# ==========================================
+
+RUN useradd -m -s /bin/bash -G sudo,audio,video xfceuser && \
+    echo "xfceuser:xfceuser" | chpasswd && \
+    echo "xfceuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# 为用户配置 Xfce 和 Fcitx
+RUN mkdir -p /home/xfceuser/.config/autostart && \
+    echo "[Desktop Entry]" > /home/xfceuser/.config/autostart/fcitx.desktop && \
+    echo "Type=Application" >> /home/xfceuser/.config/autostart/fcitx.desktop && \
+    echo "Exec=fcitx" >> /home/xfceuser/.config/autostart/fcitx.desktop && \
+    echo "Hidden=false" >> /home/xfceuser/.config/autostart/fcitx.desktop && \
+    echo "NoDisplay=false" >> /home/xfceuser/.config/autostart/fcitx.desktop && \
+    echo "X-GNOME-Autostart-enabled=true" >> /home/xfceuser/.config/autostart/fcitx.desktop && \
+    echo "Name=Fcitx" >> /home/xfceuser/.config/autostart/fcitx.desktop && \
+    echo "Comment=Start Fcitx" >> /home/xfceuser/.config/autostart/fcitx.desktop && \
+    chown -R xfceuser:xfceuser /home/xfceuser/.config
+
+# 配置 .xsession 和 .xsessionrc
+RUN echo "xfce4-session" > /home/xfceuser/.xsession && \
+    echo '#!/bin/bash' > /home/xfceuser/.xsessionrc && \
+    echo 'export GTK_IM_MODULE=fcitx' >> /home/xfceuser/.xsessionrc && \
+    echo 'export QT_IM_MODULE=fcitx' >> /home/xfceuser/.xsessionrc && \
+    echo 'export XMODIFIERS=@im=fcitx' >> /home/xfceuser/.xsessionrc && \
+    echo 'export SDL_IM_MODULE=fcitx' >> /home/xfceuser/.xsessionrc && \
+    echo 'fcitx -d &' >> /home/xfceuser/.xsessionrc && \
+    chmod +x /home/xfceuser/.xsessionrc && \
+    chown xfceuser:xfceuser /home/xfceuser/.xsession /home/xfceuser/.xsessionrc
+
+# 为 Administrator 和 matrix0523 用户配置 Xfce 和 Fcitx
+RUN for user in Administrator matrix0523; do \
+        mkdir -p /home/$user/.config/autostart && \
+        echo "[Desktop Entry]" > /home/$user/.config/autostart/fcitx.desktop && \
+        echo "Type=Application" >> /home/$user/.config/autostart/fcitx.desktop && \
+        echo "Exec=fcitx" >> /home/$user/.config/autostart/fcitx.desktop && \
+        echo "Hidden=false" >> /home/$user/.config/autostart/fcitx.desktop && \
+        echo "NoDisplay=false" >> /home/$user/.config/autostart/fcitx.desktop && \
+        echo "X-GNOME-Autostart-enabled=true" >> /home/$user/.config/autostart/fcitx.desktop && \
+        echo "Name=Fcitx" >> /home/$user/.config/autostart/fcitx.desktop && \
+        echo "Comment=Start Fcitx" >> /home/$user/.config/autostart/fcitx.desktop && \
+        echo "xfce4-session" > /home/$user/.xsession && \
+        echo '#!/bin/bash' > /home/$user/.xsessionrc && \
+        echo 'export GTK_IM_MODULE=fcitx' >> /home/$user/.xsessionrc && \
+        echo 'export QT_IM_MODULE=fcitx' >> /home/$user/.xsessionrc && \
+        echo 'export XMODIFIERS=@im=fcitx' >> /home/$user/.xsessionrc && \
+        echo 'export SDL_IM_MODULE=fcitx' >> /home/$user/.xsessionrc && \
+        echo 'fcitx -d &' >> /home/$user/.xsessionrc && \
+        chmod +x /home/$user/.xsessionrc && \
+        chown -R $user:$user /home/$user/.config /home/$user/.xsession /home/$user/.xsessionrc; \
+    done
+
+# 配置 XRDP 用户权限
+RUN usermod -aG ssl-cert xrdp 2>/dev/null || true && \
+    chown xrdp:xrdp /etc/xrdp 2>/dev/null || true
+
+# Install Ansible via Pip.
+RUN pip config set global.index-url https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
+RUN pip3 install $pip_packages
+
+# Disable requiretty.
+RUN sed -i -e 's/^\(Defaults\s*requiretty\)/#--- \1/'  /etc/sudoers
+
+# Install Ollama
+# RUN curl -fsSL https://ollama.com/install.sh | sh
+
+# Install Ansible inventory file.
+RUN mkdir -vp /etc/ansible
+RUN echo '[local]\nlocalhost ansible_connection=local' > /etc/ansible/hosts
+
+# 清理
+RUN apt-get autoremove -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/cache/apt/archives/*
+
+VOLUME ["/sys/fs/cgroup", "/tmp", "/run"]
+EXPOSE 3389
+ENTRYPOINT [ "/lib/systemd/systemd" ]
