@@ -383,7 +383,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 # Build and install PulseAudio xRDP module
-WORKDIR /tmp
+WORKDIR /root
 RUN apt-get update && apt-get install -y --no-install-recommends \
     doxygen \
     lsb-release \

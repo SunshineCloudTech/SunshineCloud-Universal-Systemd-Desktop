@@ -20,6 +20,7 @@
 	"runArgs": [
 		"--privileged",
 		"--cgroupns=host",
+		"--network=host",
 		"--tmpfs=/tmp",
 		"--tmpfs=/run",
 		"--tmpfs=/run/lock"
@@ -33,7 +34,7 @@
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// 3389: xRDP (Remote Desktop), 22: SSH
-	"forwardPorts": [3389, 22],
+	"forwardPorts": [3389, 2222, 3306],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
 	// "postCreateCommand": "systemctl status || true",
