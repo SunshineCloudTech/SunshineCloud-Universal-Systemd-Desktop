@@ -125,6 +125,13 @@ RUN mkdir -p /home/Administrator/Desktop /home/Administrator/Documents /home/Adm
     chown -R Administrator:Administrator /home/Administrator && \
     chown -R matrix0523:matrix0523 /home/matrix0523
 
+# ==========================================
+# 配置 MOTD (Message of the Day)
+# ==========================================
+
+COPY scripts/motd-install.sh /tmp/motd-install.sh
+RUN sudo bash /tmp/motd-install.sh
+
 # ============================================
 # KDE Plasma 桌面环境安装
 # ============================================
@@ -447,36 +454,6 @@ RUN apt-get autoremove -y && \
            /var/tmp/* \
            /var/cache/apt/archives/*
 
-# Configure MOTD and bash settings
-RUN echo "███████╗██╗   ██╗███╗   ██╗███████╗██╗  ██╗██╗███╗   ██╗███████╗ ██████╗██╗      ██████╗ ██╗   ██╗██████╗ " > /etc/motd && \
-    echo "██╔════╝██║   ██║████╗  ██║██╔════╝██║  ██║██║████╗  ██║██╔════╝██╔════╝██║     ██╔═══██╗██║   ██║██╔══██╗" >> /etc/motd && \
-    echo "███████╗██║   ██║██╔██╗ ██║███████╗███████║██║██╔██╗ ██║█████╗  ██║     ██║     ██║   ██║██║   ██║██║  ██║" >> /etc/motd && \
-    echo "╚════██║██║   ██║██║╚██╗██║╚════██║██╔══██║██║██║╚██╗██║██╔══╝  ██║     ██║     ██║   ██║██║   ██║██║  ██║" >> /etc/motd && \
-    echo "███████║╚██████╔╝██║ ╚████║███████║██║  ██║██║██║ ╚████║███████╗╚██████╗███████╗╚██████╔╝╚██████╔╝██████╔╝" >> /etc/motd && \
-    echo "╚══════╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝╚══════╝ ╚═════╝╚══════╝ ╚═════╝  ╚═════╝ ╚═════╝ " >> /etc/motd && \
-    echo "                                                                                                          " >> /etc/motd && \
-    echo "if [ -t 1 ]; then" >> /etc/bash.bashrc && \
-    echo "  if command -v run-parts >/dev/null 2>&1 && [ -d /etc/update-motd.d ]; then" >> /etc/bash.bashrc && \
-    echo "    run-parts /etc/update-motd.d > /tmp/_motd" >> /etc/bash.bashrc && \
-    echo "    cat /etc/motd" >> /etc/bash.bashrc && \
-    echo "    cat /tmp/_motd" >> /etc/bash.bashrc && \
-    echo "    rm -f /tmp/_motd" >> /etc/bash.bashrc && \
-    echo "  else" >> /etc/bash.bashrc && \
-    echo "    cat /etc/motd" >> /etc/bash.bashrc && \
-    echo "  fi" >> /etc/bash.bashrc && \
-    echo "fi" >> /etc/bash.bashrc && \
-    # Create welcome message for MOTD
-    echo '#!/bin/sh' > /etc/update-motd.d/10-uname && \
-    echo 'echo "👋 Welcome to SunshineCloud Codespaces! You are on our default image."' >> /etc/update-motd.d/10-uname && \
-    echo 'echo "   - It includes runtimes and tools for Python, Node.js, Docker, and more. See the full list here: https://aka.ms/ghcs-default-image"' >> /etc/update-motd.d/10-uname && \
-    echo 'echo "   - Want to use a custom image instead? Learn more here: https://aka.ms/configure-codespace"' >> /etc/update-motd.d/10-uname && \
-    echo 'echo ""' >> /etc/update-motd.d/10-uname && \
-    echo 'echo "🔍 To explore VS Code to its fullest, search using the Command Palette (Cmd/Ctrl + Shift + P or F1)."' >> /etc/update-motd.d/10-uname && \
-    echo 'echo ""' >> /etc/update-motd.d/10-uname && \
-    echo 'echo "📝 Edit away, run your app as usual, and we'"'"'ll automatically make it available for you to access."' >> /etc/update-motd.d/10-uname && \
-    echo 'echo ""' >> /etc/update-motd.d/10-uname && \
-    chmod +x /etc/update-motd.d/10-uname
-
 # Install Homebrew
 RUN mkdir -vp /SunshineCloud/Homebrew/ && \
     git clone --depth=1 https://github.com/Homebrew/brew /SunshineCloud/Homebrew && \
@@ -510,5 +487,6 @@ RUN echo "Installing Visual Studio Code..." && \
 # 暴露 XRDP 端口
 EXPOSE 3389
 
+WORKDIR /root
 VOLUME ["/sys/fs/cgroup", "/tmp", "/run"]
 ENTRYPOINT [ "/lib/systemd/systemd" ]

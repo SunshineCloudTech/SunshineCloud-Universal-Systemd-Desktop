@@ -125,6 +125,13 @@ RUN mkdir -p /home/Administrator/Desktop /home/Administrator/Documents /home/Adm
     chown -R Administrator:Administrator /home/Administrator && \
     chown -R matrix0523:matrix0523 /home/matrix0523
 
+# ==========================================
+# 配置 MOTD (Message of the Day)
+# ==========================================
+
+COPY scripts/motd-install.sh /tmp/motd-install.sh
+RUN sudo bash /tmp/motd-install.sh
+
 # ============================================
 # KDE Plasma 桌面环境安装
 # ============================================
@@ -421,5 +428,6 @@ RUN apt-get autoremove -y && \
 # 暴露 XRDP 端口
 EXPOSE 3389
 
+WORKDIR /root
 VOLUME ["/sys/fs/cgroup", "/tmp", "/run"]
 ENTRYPOINT [ "/lib/systemd/systemd" ]

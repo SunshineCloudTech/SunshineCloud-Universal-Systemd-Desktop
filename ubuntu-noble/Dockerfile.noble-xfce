@@ -113,6 +113,13 @@ RUN mkdir -p /home/Administrator/Desktop /home/Administrator/Documents /home/Adm
     chown -R matrix0523:matrix0523 /home/matrix0523
 
 # ==========================================
+# 配置 MOTD (Message of the Day)
+# ==========================================
+
+COPY scripts/motd-install.sh /tmp/motd-install.sh
+RUN sudo bash /tmp/motd-install.sh
+
+# ==========================================
 # 安装 Xfce 桌面环境
 # ==========================================
 
@@ -371,6 +378,7 @@ RUN apt-get autoremove -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/cache/apt/archives/*
 
-VOLUME ["/sys/fs/cgroup", "/tmp", "/run"]
 EXPOSE 3389
+WORKDIR /root
+VOLUME ["/sys/fs/cgroup", "/tmp", "/run"]
 ENTRYPOINT [ "/lib/systemd/systemd" ]
