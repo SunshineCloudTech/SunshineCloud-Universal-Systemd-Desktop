@@ -389,12 +389,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rm -rf /var/lib/apt/lists/*
 
 # ============================================
-# 音频支持
+# 音频支持（PipeWire）
 # ============================================
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    pulseaudio \
-    pulseaudio-utils \
+    pipewire \
+    pipewire-audio-client-libraries \
+    libpipewire-0.3-0 \
+    libpipewire-0.3-modules \
+    pipewire-pulse \
+    wireplumber \
+    pipewire-alsa \
+    pipewire-media-session- \
     alsa-utils \
     pavucontrol-qt && \
     apt-get clean && \
@@ -408,19 +414,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cmake \
     m4 \
     git \
-    libpulse* \
+    libpipewire-* \
     sudo \
     curl \
     wget \
     coreutils && \
-    git clone https://github.com/neutrinolabs/pulseaudio-module-xrdp && \
-    cd pulseaudio-module-xrdp && \
-    bash scripts/install_pulseaudio_sources_apt.sh && \
+    git clone https://github.com/neutrinolabs/pipewire-module-xrdp && \
+    cd pipewire-module-xrdp && \
     ./bootstrap && \
-    ./configure PULSE_DIR=$HOME/pulseaudio.src && \
+    ./configure && \
     make -j"$(nproc)" install && \
     cd / && \
-    rm -rf /tmp/pulseaudio-module-xrdp && \
+    rm -rf /tmp/pipewire-module-xrdp && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -494,8 +499,11 @@ RUN echo "Installing Visual Studio Code..." && \
     rm -rf /var/lib/apt/lists/* && \
     echo "Visual Studio Code installation completed"
 
-# 暴露 XRDP 端口
+# 暴露服务端口
 EXPOSE 3389
+EXPOSE 8888
+EXPOSE 11434
+EXPOSE 2222
 
 WORKDIR /root
 VOLUME ["/sys/fs/cgroup", "/tmp", "/run"]

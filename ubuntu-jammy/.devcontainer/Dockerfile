@@ -379,8 +379,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rm -rf /var/lib/apt/lists/*
 
 # ============================================
-# 音频支持
+# 音频支持（阻止 PipeWire 安装）
 # ============================================
+
+# 配置 APT 阻止 PipeWire 相关包的安装
+RUN echo 'Package: pipewire*' > /etc/apt/preferences.d/no-pipewire && \
+    echo 'Pin: release *' >> /etc/apt/preferences.d/no-pipewire && \
+    echo 'Pin-Priority: -1' >> /etc/apt/preferences.d/no-pipewire && \
+    echo '' >> /etc/apt/preferences.d/no-pipewire && \
+    echo 'Package: libpipewire*' >> /etc/apt/preferences.d/no-pipewire && \
+    echo 'Pin: release *' >> /etc/apt/preferences.d/no-pipewire && \
+    echo 'Pin-Priority: -1' >> /etc/apt/preferences.d/no-pipewire && \
+    echo '' >> /etc/apt/preferences.d/no-pipewire && \
+    echo 'Package: wireplumber*' >> /etc/apt/preferences.d/no-pipewire && \
+    echo 'Pin: release *' >> /etc/apt/preferences.d/no-pipewire && \
+    echo 'Pin-Priority: -1' >> /etc/apt/preferences.d/no-pipewire
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     pulseaudio \
@@ -484,8 +497,11 @@ RUN echo "Installing Visual Studio Code..." && \
     rm -rf /var/lib/apt/lists/* && \
     echo "Visual Studio Code installation completed"
 
-# 暴露 XRDP 端口
+# 暴露服务端口
 EXPOSE 3389
+EXPOSE 8888
+EXPOSE 11434
+EXPOSE 2222
 
 WORKDIR /root
 VOLUME ["/sys/fs/cgroup", "/tmp", "/run"]
