@@ -1,20 +1,20 @@
 ---
-name: Build Ubuntu Jammy ARM64
+name: Build Ubuntu Noble AMD64
 
 on:
   workflow_dispatch:
-  pull_request:
-  push:
-    branches:
-     - main
-  schedule:
-    - cron: "25 2 * * 1"
+  # pull_request:
+  # push:
+  #   branches:
+  #    - main
+  # schedule:
+  #   - cron: "25 2 * * 1"
 
 jobs:
   # Test the image builds and works correctly.
   test:
     name: Test
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -26,13 +26,13 @@ jobs:
         uses: docker/setup-buildx-action@v3  
 
       - name: Test building image.
-        run: docker build -t jammy-systemd -f ubuntu-jammy/.devcontainer/Dockerfile .
+        run: docker build -t noble-systemd -f ubuntu-noble/.devcontainer/Dockerfile .
 
       - name: Run the built image.
         run: |
           docker run --name test-container -d --privileged \
             -v /sys/fs/cgroup:/sys/fs/cgroup:rw --cgroupns=host \
-            jammy-systemd
+            noble-systemd
 
       - name: Verify Ansible is accessible in the built image.
         run: docker exec --tty test-container env TERM=xterm ansible --version
@@ -40,7 +40,7 @@ jobs:
   # If on master branch, build and release image.
   release:
     name: Release
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-latest
     needs: test
     if: github.ref == 'refs/heads/main'
 
@@ -80,13 +80,13 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
 
-      - name: Build and push Dev Container image (ARM64)
+      - name: Build and push Dev Container image (AMD64)
         uses: devcontainers/ci@v0.3
         with:
           imageName: sunshinecloud007/sunshinecloud-universal-systemd-desktop
-          imageTag: arm64-jammy-base
-          subFolder: ubuntu-jammy
-          platform: linux/arm64
+          imageTag: amd64-noble-base
+          subFolder: ubuntu-noble
+          platform: linux/amd64
           noCache: true
           push: always
 

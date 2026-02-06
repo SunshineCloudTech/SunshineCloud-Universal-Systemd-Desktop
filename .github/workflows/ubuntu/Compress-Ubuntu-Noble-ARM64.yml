@@ -1,13 +1,13 @@
 ---
-name: Compress Ubuntu Focal ARM64 Image
+name: Compress Ubuntu Noble ARM64 Image
 
 on:
   workflow_run:
-    workflows: ["Build Ubuntu Focal ARM64"]
+    workflows: ["Build Ubuntu Noble ARM64"]
     types:
       - completed
-    branches:
-     - main
+    # branches:
+    #  - main
   workflow_dispatch:
 
 jobs:
@@ -53,14 +53,14 @@ jobs:
 
       - name: Pull Base Image (ARM64)
         run: |
-          docker pull sunshinecloud007/sunshinecloud-universal-systemd-desktop:arm64-focal-base
-          docker images sunshinecloud007/sunshinecloud-universal-systemd-desktop:arm64-focal-base
+          docker pull sunshinecloud007/sunshinecloud-universal-systemd-desktop:arm64-noble-base
+          docker images sunshinecloud007/sunshinecloud-universal-systemd-desktop:arm64-noble-base
           df -h
 
       - name: Compress Docker Image (ARM64)
         run: |
-          export src_image_name=sunshinecloud007/sunshinecloud-universal-systemd-desktop:arm64-focal-base
-          export docker_tmp_name=temp-focal-arm64
+          export src_image_name=sunshinecloud007/sunshinecloud-universal-systemd-desktop:arm64-noble-base
+          export docker_tmp_name=temp-noble-arm64
           echo "Creating temporary container from image..."
           docker create -it -P --name $docker_tmp_name $src_image_name
           echo "Exporting container to tar..."
@@ -70,22 +70,22 @@ jobs:
           echo "Removing base image..."
           docker rmi $src_image_name
           echo "Importing tar to image..."
-          docker import $docker_tmp_name.tar sunshinecloud007/sunshinecloud-universal-systemd-desktop:ubuntu-focal-temp-arm64
+          docker import $docker_tmp_name.tar sunshinecloud007/sunshinecloud-universal-systemd-desktop:ubuntu-noble-temp-arm64
           echo "Creating temporary container from imported image..."
-          docker create -it -P --name $docker_tmp_name sunshinecloud007/sunshinecloud-universal-systemd-desktop:ubuntu-focal-temp-arm64 bash
+          docker create -it -P --name $docker_tmp_name sunshinecloud007/sunshinecloud-universal-systemd-desktop:ubuntu-noble-temp-arm64 bash
           echo "Committing container with metadata..."
           docker commit \
             --change='USER root' \
             --change='WORKDIR /root' \
             --change='VOLUME ["/sys/fs/cgroup", "/tmp", "/run"]' \
             --change='ENTRYPOINT [ "/lib/systemd/systemd" ]' \
-            $docker_tmp_name sunshinecloud007/sunshinecloud-universal-systemd-desktop:arm64-focal
+            $docker_tmp_name sunshinecloud007/sunshinecloud-universal-systemd-desktop:arm64-noble
           rm $docker_tmp_name.tar
           docker images sunshinecloud007/sunshinecloud-universal-systemd-desktop
 
       - name: Push Compressed Images (ARM64)
         run: |
-          docker push sunshinecloud007/sunshinecloud-universal-systemd-desktop:arm64-focal
+          docker push sunshinecloud007/sunshinecloud-universal-systemd-desktop:arm64-noble
 
       - name: Print Disk Usage
         run: |

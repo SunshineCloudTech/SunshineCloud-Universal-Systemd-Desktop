@@ -6,8 +6,8 @@ on:
     workflows: ["Build Ubuntu Noble AMD64"]
     types:
       - completed
-    branches:
-     - main
+    # branches:
+    #  - main
   workflow_dispatch:
 
 jobs:

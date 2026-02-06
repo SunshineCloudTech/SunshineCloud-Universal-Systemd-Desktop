@@ -9,12 +9,6 @@
 - Debian 12 Bookworm
 - Debian 11 Bullseye
 
-### Ubuntu LTS 系列
-
-- Ubuntu 24.04 Noble Numbat
-- Ubuntu 22.04 Jammy Jellyfish
-- Ubuntu 20.04 Focal Fossa
-
 ## 镜像类型
 
 本仓库提供两种类型的镜像：
@@ -71,9 +65,6 @@
 ```bash
 # Debian 12 Bookworm
 docker build -t debian-bookworm-systemd -f debian-bookworm/.devcontainer/Dockerfile .
-
-# Ubuntu 24.04 Noble
-docker build -t ubuntu-noble-systemd -f ubuntu-noble/.devcontainer/Dockerfile .
 ```
 
 ### 构建桌面环境镜像
@@ -110,24 +101,6 @@ done
 - `debian-bullseye/Dockerfile.bullseye-xfce`
 - `debian-bullseye/Dockerfile.bullseye-gnome`
 
-**Ubuntu Noble:**
-
-- `ubuntu-noble/Dockerfile.noble-kde`
-- `ubuntu-noble/Dockerfile.noble-xfce`
-- `ubuntu-noble/Dockerfile.noble-gnome`
-
-**Ubuntu Jammy:**
-
-- `ubuntu-jammy/Dockerfile.jammy-kde`
-- `ubuntu-jammy/Dockerfile.jammy-xfce`
-- `ubuntu-jammy/Dockerfile.jammy-gnome`
-
-**Ubuntu Focal:**
-
-- `ubuntu-focal/Dockerfile.focal-kde`
-- `ubuntu-focal/Dockerfile.focal-xfce`
-- `ubuntu-focal/Dockerfile.focal-gnome`
-
 ## 使用 Docker Hub 镜像
 
 ### 拉取镜像
@@ -135,11 +108,11 @@ done
 ```bash
 # AMD64 基础镜像
 docker pull sunshinecloud007/sunshinecloud-universal-systemd-desktop:amd64-bookworm
-docker pull sunshinecloud007/sunshinecloud-universal-systemd-desktop:amd64-noble
+docker pull sunshinecloud007/sunshinecloud-universal-systemd-desktop:amd64-bullseye
 
 # ARM64 基础镜像
 docker pull sunshinecloud007/sunshinecloud-universal-systemd-desktop:arm64-bookworm
-docker pull sunshinecloud007/sunshinecloud-universal-systemd-desktop:arm64-noble
+docker pull sunshinecloud007/sunshinecloud-universal-systemd-desktop:arm64-bullseye
 ```
 
 ### 可用镜像标签
@@ -148,17 +121,11 @@ docker pull sunshinecloud007/sunshinecloud-universal-systemd-desktop:arm64-noble
 
 - `amd64-bookworm` (Debian 12)
 - `amd64-bullseye` (Debian 11)
-- `amd64-noble` (Ubuntu 24.04)
-- `amd64-jammy` (Ubuntu 22.04)
-- `amd64-focal` (Ubuntu 20.04)
 
 **ARM64 架构：**
 
 - `arm64-bookworm` (Debian 12)
 - `arm64-bullseye` (Debian 11)
-- `arm64-noble` (Ubuntu 24.04)
-- `arm64-jammy` (Ubuntu 22.04)
-- `arm64-focal` (Ubuntu 20.04)
 
 **构建中间镜像（带 -base 后缀）：**
 
@@ -233,8 +200,8 @@ docker exec -it debian-bookworm-container ollama run llama2
 # Debian 12 Bookworm
 docker compose -f docker-compose.debian-bookworm.yml up -d
 
-# Ubuntu 24.04 Noble
-docker compose -f docker-compose.ubuntu-noble.yml up -d
+# Debian 11 Bullseye
+docker compose -f docker-compose.debian-bullseye.yml up -d
 ```
 
 ### 多容器部署
@@ -249,9 +216,6 @@ SSH 端口映射：
 
 - Debian 12 Bookworm: 2201
 - Debian 11 Bullseye: 2202
-- Ubuntu 24.04 Noble: 2203
-- Ubuntu 22.04 Jammy: 2204
-- Ubuntu 20.04 Focal: 2205
 
 ### 常用命令
 
@@ -311,9 +275,6 @@ docker compose -f docker-compose.debian-bookworm.yml down
 
 - `Debian-Bookworm-Systemd-Devcontainer`
 - `Debian-Bullseye-Systemd-Devcontainer`
-- `Ubuntu-Noble-Systemd-Devcontainer`
-- `Ubuntu-Jammy-Systemd-Devcontainer`
-- `Ubuntu-Focal-Systemd-Devcontainer`
 
 **启用的功能：**
 
@@ -347,9 +308,6 @@ docker compose -f docker-compose.debian-bookworm.yml down
 │   ├── Dockerfile.bookworm-xfce # Xfce 桌面
 │   └── Dockerfile.bookworm-gnome # GNOME 桌面
 ├── debian-bullseye/
-├── ubuntu-noble/
-├── ubuntu-jammy/
-├── ubuntu-focal/
 ├── .github/workflows/           # GitHub Actions 工作流
 ├── docker-compose.*.yml         # Docker Compose 配置
 └── build.sh                     # 构建脚本
